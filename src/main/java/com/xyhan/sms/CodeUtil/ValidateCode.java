@@ -1,7 +1,6 @@
 package com.xyhan.sms.CodeUtil;
 
 import java.time.LocalDateTime;
-
 import lombok.Data;
 
 @Data
@@ -23,10 +22,10 @@ public class ValidateCode {
         return LocalDateTime.now().isAfter(getExpireTime());
     }
 
-//    public ValidateCode(String code, LocalDateTime expireTime) {
-//        super();
-//        this.code = code;
-//        this.expireTime = expireTime;
-//
-//    }
+    public ValidateCode(String code, LocalDateTime expireTime) {
+        super();
+        this.code = code;
+        this.expireTime = expireTime;
+
+    }
 }

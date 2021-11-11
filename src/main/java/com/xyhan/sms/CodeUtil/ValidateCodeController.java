@@ -16,7 +16,6 @@ import org.springframework.web.context.request.ServletWebRequest;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
 @Slf4j
@@ -27,19 +26,22 @@ public class ValidateCodeController {
     @Autowired
     private RedisService redisService;
 
-    private  String tokenId="TOKEN-USER-";
+    private  String tokenId="TOKEN-PHONE-";
 
-    @Autowired
-    private SessionStrategy sessionStrategy;
+//    @Autowired
+//    private SessionStrategy sessionStrategy;
 
-    @Autowired
-    private ValidateCodeGenerator imageCodeGenerator;
+//    @Autowired
+//    private ValidateCodeGenerator imageCodeGenerator;
 
     @Autowired
     private ValidateCodeGenerator smsCodeGenerator;
 
     @Autowired
     private DefaultSmsCodeSender defaultSmsCodeSender;
+
+    public ValidateCodeController() {
+    }
 
     @GetMapping("/auth/sms")
     public Map<String, Object> createSmsCode(HttpServletRequest request, HttpServletResponse response) throws ServletRequestBindingException {
