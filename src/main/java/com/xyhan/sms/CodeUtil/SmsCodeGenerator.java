@@ -1,6 +1,6 @@
 package com.xyhan.sms.CodeUtil;
 
-import com.xyhan.sms.config.MyConstants;
+import com.xyhan.sms.Config.MyConstants;
 import org.springframework.stereotype.Component;
 import org.springframework.web.context.request.ServletWebRequest;
 import org.apache.commons.lang3.RandomStringUtils;

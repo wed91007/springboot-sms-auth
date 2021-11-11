@@ -1,4 +1,4 @@
-package com.xyhan.sms.config;
+package com.xyhan.sms.Config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -9,7 +9,7 @@ import org.springframework.social.connect.web.SessionStrategy;
 public class AppConfig {
 
     @Bean("sessionStrategy")
-    public SessionStrategy registBean() {
+    public SessionStrategy registryBean() {
         SessionStrategy sessionStrategy = new HttpSessionSessionStrategy();
         return sessionStrategy;
     }

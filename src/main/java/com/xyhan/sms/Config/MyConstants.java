@@ -1,4 +1,4 @@
-package com.xyhan.sms.config;
+package com.xyhan.sms.Config;
 
 public class MyConstants {
     public static final String SESSION_KEY = "SESSION_KEY_CODE";
@@ -21,6 +21,14 @@ public class MyConstants {
     //
     public static final int SMS_EXPIRE_SECOND = 120;
 
+    //
+    public static final long PHONE_REQUEST_INTERVAL = 60;
+
+    public static final long MAX_REQUEST_PER_PHONE_USER = 3;
+
+
+    public static final String DEFAULT_PARAMETER_NAME_MOBILE = "11";
+    public static final String DEFAULT_LOGIN_PROCESSING_URL_MOBILE = "11";
 
 }
 

@@ -11,18 +11,22 @@ public class ValidateCode {
 
     private LocalDateTime expireTime;
 
+    private long expireIn;
+
     public ValidateCode(String code, int expireIn){
         this.code = code;
         this.expireTime = LocalDateTime.now().plusSeconds(expireIn);
+        this.expireIn = expireIn;
     }
 
     public boolean isExpried() {
         return LocalDateTime.now().isAfter(getExpireTime());
     }
 
-    public ValidateCode(String code, LocalDateTime expireTime) {
-        super();
-        this.code = code;
-        this.expireTime = expireTime;
-    }
+//    public ValidateCode(String code, LocalDateTime expireTime) {
+//        super();
+//        this.code = code;
+//        this.expireTime = expireTime;
+//
+//    }
 }

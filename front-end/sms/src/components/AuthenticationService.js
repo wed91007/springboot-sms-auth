@@ -1,39 +1,35 @@
 import Axios from "axios";
-import {API_URL} from '../../Constants'
 export const USER_NAME_SESSION_ATTRIBUTE_NAME = 'authenticatedUser'
-
+const qs = require('qs')
 class AuthenticationService {
-    //Basic Auth
-    executeBasicAuthenticationService(username, password) {
-        return Axios.get(`${API_URL}/basicauth`, 
-            {headers: {authorization: this.createBasicAuthToken(username, password)}})
-    }
-    createBasicAuthToken(username, password) {
-        return 'Basic ' + window.btoa(username + ":" + password)
+
+    executeSmsGetCode(phone) {
+        return Axios.get(`http://localhost:8080/auth/sms`, {params : {phone : phone}})
     }
 
-    registerSuccessfulLogin(username, password){
-        sessionStorage.setItem(USER_NAME_SESSION_ATTRIBUTE_NAME, username);
-        this.setupAxiosInterceptors(this.createBasicAuthToken(username, password))
-    }
-
-    //Jwt Auth
-    executeJwtAuthenticationService(username, password) {
-        return Axios.post(`${API_URL}/authenticate`, {
-            username,
-            password
-        })
-    }
-    createJwtToken(token) {
-        return 'Bearer ' + token
-    }
-    registerSuccessfulLoginForJwt(username, token){
-        sessionStorage.setItem(USER_NAME_SESSION_ATTRIBUTE_NAME, username);
-        this.setupAxiosInterceptors(this.createJwtToken(token))
+    executeSmsAuthenticationService(phone, sms) {
+        let postData = qs.stringify({phone, sms})
+        return Axios.post(`http://localhost:8080/auth/login`, postData)
     }
 
 
-    //Utils
+    // //Basic Auth
+    // executeBasicAuthenticationService(username, password) {
+    //     return Axios.get(`${API_URL}/basicauth`, 
+    //         {headers: {authorization: this.createBasicAuthToken(username, password)}})
+    // }
+    // createBasicAuthToken(username, password) {
+    //     return 'Basic ' + window.btoa(username + ":" + password)
+    // }
+
+    // registerSuccessfulLogin(phone, password){
+    //     sessionStorage.setItem(USER_NAME_SESSION_ATTRIBUTE_NAME, phone);
+    //     this.setupAxiosInterceptors(this.createBasicAuthToken(username, password))
+    // }
+
+
+
+    // //Utils
     logout(){
         sessionStorage.removeItem(USER_NAME_SESSION_ATTRIBUTE_NAME)
     }
@@ -44,22 +40,27 @@ class AuthenticationService {
             return true
     }
 
-    getLoggedInUserName() {
-        let user = sessionStorage.getItem(USER_NAME_SESSION_ATTRIBUTE_NAME)
-        if(user == null) return ''
-        return user
-    }
+    registerSuccessfulLogin(phone){
+            sessionStorage.setItem(USER_NAME_SESSION_ATTRIBUTE_NAME, phone);
+            // this.setupAxiosInterceptors(this.createJwtToken(token))
+        }
 
-    setupAxiosInterceptors(token) {
+    // getLoggedInUserName() {
+    //     let user = sessionStorage.getItem(USER_NAME_SESSION_ATTRIBUTE_NAME)
+    //     if(user == null) return ''
+    //     return user
+    // }
+
+    // setupAxiosInterceptors(token) {
        
-        Axios.interceptors.request.use(
-            (config) => {
-                if(this.isUserLoggedIn()) {
-                    config.headers.authorization = token
-                }
-                return config
-            }
-        )
-    }
+    //     Axios.interceptors.request.use(
+    //         (config) => {
+    //             if(this.isUserLoggedIn()) {
+    //                 config.headers.authorization = token
+    //             }
+    //             return config
+    //         }
+    //     )
+    // }
 }
 export default new AuthenticationService();
