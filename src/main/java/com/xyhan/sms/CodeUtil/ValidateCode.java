@@ -18,14 +18,12 @@ public class ValidateCode {
         this.expireIn = expireIn;
     }
 
-    public boolean isExpried() {
-        return LocalDateTime.now().isAfter(getExpireTime());
-    }
-
     public ValidateCode(String code, LocalDateTime expireTime) {
         super();
         this.code = code;
         this.expireTime = expireTime;
-
+    }
+    public boolean isExpried() {
+        return LocalDateTime.now().isAfter(getExpireTime());
     }
 }

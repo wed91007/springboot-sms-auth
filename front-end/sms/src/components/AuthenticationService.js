@@ -3,8 +3,8 @@ export const USER_NAME_SESSION_ATTRIBUTE_NAME = 'authenticatedUser'
 const qs = require('qs')
 class AuthenticationService {
 
-    executeSmsGetCode(phone) {
-        return Axios.get(`http://localhost:8080/auth/sms`, {params : {phone : phone}})
+    executeSmsGetCode(phone, imgCode) {
+        return Axios.get(`http://localhost:8080/auth/sms`, {params : {phone, imgCode}})
     }
 
     executeSmsAuthenticationService(phone, sms) {

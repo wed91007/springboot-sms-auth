@@ -1,6 +1,6 @@
 import React, {Component} from 'react'
 import AuthenticationService from './AuthenticationService.js'
-
+import Axios from "axios";
 
 class LoginComponent extends Component {
     constructor(props){
@@ -10,6 +10,9 @@ class LoginComponent extends Component {
             // password : '',
             phone : '',
             sms: '',
+            imgCode: '',
+            imgBase64: '',
+            imgCodeFailed: false,
             phoneValidated: false,
             smsValidated: false,
             smsSendSuccess : false,
@@ -21,10 +24,24 @@ class LoginComponent extends Component {
         
         this.phoneHandlerChange = this.phoneHandlerChange.bind(this)
         this.smsHandlerChange = this.smsHandlerChange.bind(this)
+        this.imgCodeHandlerChange = this.imgCodeHandlerChange.bind(this)
         this.loginClicked = this.loginClicked.bind(this)
         this.sendCodeClicked = this.sendCodeClicked.bind(this)
         this.clearStatus = this.clearStatus.bind(this)
+        this.refreshImageCode = this.refreshImageCode.bind(this)
     }
+
+    componentDidMount() {
+        this.refreshImageCode();
+      }
+
+      refreshImageCode() {
+        Axios.get('http://localhost:8080/auth/getImage/base64'
+        )
+        .then(response => {
+          this.setState({ imgBase64: response.data.url});
+        });
+      }
 
 
     phoneHandlerChange(event) {
@@ -47,6 +64,16 @@ class LoginComponent extends Component {
         else(this.setState({smsValidated: false}))
     }
 
+    imgCodeHandlerChange(event) {
+        this.setState({[event.target.name]: event.target.value })
+        const reg = /^\d*?$/;
+        if ((reg.test(event.target.value) && event.target.value.length === 4)) {
+            console.log("imgCode is valid")
+        }
+    }
+
+
+
     clearStatus() {
         this.setState({
             smsSendSuccess : false,
@@ -62,19 +89,25 @@ class LoginComponent extends Component {
 
     sendCodeClicked() {
         console.log("send code clicked")
+        
         if(this.state.phoneValidated) {
             this.clearStatus()
             AuthenticationService
-            .executeSmsGetCode(this.state.phone)
+            .executeSmsGetCode(this.state.phone, this.state.imgCode)
             .then( (response) => {
+                if(response.data.status === "img code error"){
+                    this.setState({imgCodeFailed: true})
+                }
+
+
                 if(response.data.status === "repeated"){
                     this.setState({repeatedClick: true})
                 }
                 this.setState({smsSendSuccess: true})
             })
-            .catch( () => {
+            .catch( (response) => {
                 this.setState({smsSendSuccessError : true})
-                console.log(this.state.phone)
+                console.log(response)
             })
         }
         else {
@@ -85,7 +118,7 @@ class LoginComponent extends Component {
             })
         }
             
-        
+        this.refreshImageCode()
         
     }
     
@@ -124,6 +157,7 @@ class LoginComponent extends Component {
                     {this.state.showSuccessMessage && <div>登录成功</div>}
                     手机: <input type="text" name="phone" value={this.state.phone} onChange={this.phoneHandlerChange}/>
                     验证码: <input type="text" name="sms" value={this.state.sms} onChange={this.smsHandlerChange}/>
+                    <input type="text" name="imgCode" value={this.state.imgCode} onChange={this.imgCodeHandlerChange}/> <img src={this.state.imgBase64} alt="validation code"/>
                     <button className="btn btn-warning" onClick={this.sendCodeClicked}>发送验证码</button>
                     <button className="btn btn-success" onClick={this.loginClicked}>登录</button>
                 </div>

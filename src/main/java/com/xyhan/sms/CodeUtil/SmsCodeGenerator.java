@@ -9,11 +9,9 @@ import org.apache.commons.lang3.RandomStringUtils;
 // 短信验证码生成器
 @Component("smsCodeGenerator")
 public class SmsCodeGenerator implements ValidateCodeGenerator {
-
     @Override
     public ValidateCode generate(ServletWebRequest request) {
         String code = RandomStringUtils.randomNumeric(MyConstants.SMS_RANDOM_SIZE);
         return new ValidateCode(code, MyConstants.SMS_EXPIRE_SECOND);
     }
-
 }

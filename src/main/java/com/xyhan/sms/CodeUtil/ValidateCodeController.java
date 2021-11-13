@@ -14,10 +14,18 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.context.request.ServletWebRequest;
 
+import javax.imageio.ImageIO;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import java.awt.*;
+import java.awt.image.BufferedImage;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.util.Base64;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Random;
+
 @Slf4j
 @CrossOrigin(origins = "http://localhost:4200")
 @RestController
@@ -28,17 +36,20 @@ public class ValidateCodeController {
 
     private  String tokenId="TOKEN-PHONE-";
 
-//    @Autowired
-//    private SessionStrategy sessionStrategy;
+    @Autowired
+    private SessionStrategy sessionStrategy;
 
-//    @Autowired
-//    private ValidateCodeGenerator imageCodeGenerator;
+    @Autowired
+    private ValidateCodeGenerator imageCodeGenerator;
 
     @Autowired
     private ValidateCodeGenerator smsCodeGenerator;
 
     @Autowired
     private DefaultSmsCodeSender defaultSmsCodeSender;
+
+    @Autowired
+    private ValidateCodeService validateCodeService;
 
     public ValidateCodeController() {
     }
@@ -47,60 +58,16 @@ public class ValidateCodeController {
     public Map<String, Object> createSmsCode(HttpServletRequest request, HttpServletResponse response) throws ServletRequestBindingException {
         //get phone number
         String phone = ServletRequestUtils.getStringParameter(request, "phone");
-
+        String imgCode = ServletRequestUtils.getStringParameter(request, "imgCode");
         Map<String, Object> map = new HashMap<>();
-        //从redis取出手机号进行校验
-        //如果redis不存在该手机：生成验证码，写入redis，返回。设置失效时间。
-        //如果redis存在该手机：判断请求时间间隔是否超过；
-        if(!redisService.exist(tokenId+phone)) { //当前不验证码存在，产生新验证
-
-            //生成sms code
-            ValidateCode smsCode = smsCodeGenerator.generate(new ServletWebRequest(request));
-            //store in redis
-
-            map.put("verifyCode", smsCode.getCode());
-            map.put("phone", phone);
-
-            if(response.getStatus() == 200) {
-                map.put("status", "OK");
-                redisService.set(tokenId+phone, smsCode.getCode());
-                redisService.expire(tokenId+phone, smsCode.getExpireIn());
-                //记录次数
-                redisService.set(smsCode.getCode(), "1");
-                redisService.expire(smsCode.getCode(), smsCode.getExpireIn());
-
-                redisService.set(phone, "1");
-                redisService.expire(phone, MyConstants.PHONE_REQUEST_INTERVAL);
-
-                //send code to phone (show in logs)
-                defaultSmsCodeSender.send(phone, smsCode.getCode());
-            }
+        ImageCode imgCodeInMemory = (ImageCode) sessionStrategy.getAttribute(new ServletWebRequest(request), MyConstants.SESSION_KEY);
+        String sessionCode = imgCodeInMemory.getCode();
+        if(sessionCode != null && sessionCode.equals(imgCode)) {
+            map = validateCodeService.SmsRedisValidate(request, response, phone);
         }
-        else {//当前验证码存在，进行判断
-            String smsInMemory = redisService.get(tokenId+phone);
-            if(!redisService.exist(phone)) {         //距上次请求超过1分钟，phone记录不存在
-                if(response.getStatus() == 200) {
-                    map.put("status", "OK");
-                    long ttl = redisService.ttl(tokenId+phone);
-
-                    redisService.set(phone, "1");
-                    redisService.expire(phone, Math.min(ttl, MyConstants.PHONE_REQUEST_INTERVAL)); //有效期最多至sms相同有效期
-                    map.put("verifyCode", smsInMemory);
-                    map.put("phone", phone);
-                    defaultSmsCodeSender.send(phone, smsInMemory);
-                }
-
-
-            } else{//距上次请求未超过1分钟
-                if(response.getStatus() == 200) {
-                    map.put("status", "repeated");
-                }
-            }
+        else{
+            map.put("status", "img code error");
         }
-
-        //store in session
-//      sessionStrategy.setAttribute(new ServletWebRequest(request), MyConstants.SESSION_KEY, smsCode);
-
         return map;
     }
 
@@ -135,6 +102,54 @@ public class ValidateCodeController {
         return map;
     }
 
+    @GetMapping("auth/getImage")
+    public void createImageCode(HttpServletRequest request, HttpServletResponse response) throws IOException {
+
+        try{
+            response.setContentType("image/png");
+            response.setHeader("Cache-Control", "no-cache");
+            response.setHeader("Expire", "0");
+            response.setHeader("Pragma", "no-cache");
+            ImageCode imageCode = (ImageCode)imageCodeGenerator.generate(new ServletWebRequest(request));
+            sessionStrategy.removeAttribute(new ServletWebRequest(request), MyConstants.SESSION_KEY);
+            sessionStrategy.setAttribute(new ServletWebRequest(request), MyConstants.SESSION_KEY, imageCode);
+            ImageIO.write(imageCode.getImage(), "PNG", response.getOutputStream());
+        }
+        catch(Exception e){
+            e.printStackTrace();
+        }
+    }
+
+    @GetMapping("auth/getImage/base64")
+    public Map<String, String> createImageCodeBase64(HttpServletRequest request, HttpServletResponse response) {
+
+        Map<String, String> map = new HashMap<>();
+
+        try{
+            response.setContentType("image/png");
+            response.setHeader("Cache-Control", "no-cache");
+            response.setHeader("Expire", "0");
+            response.setHeader("Pragma", "no-cache");
+
+            ImageCode imageCode = (ImageCode)imageCodeGenerator.generate(new ServletWebRequest(request));
+            sessionStrategy.removeAttribute(new ServletWebRequest(request), MyConstants.SESSION_KEY);
+            sessionStrategy.setAttribute(new ServletWebRequest(request), MyConstants.SESSION_KEY, imageCode);
+
+            ByteArrayOutputStream bos = new ByteArrayOutputStream();
+            ImageIO.write(imageCode.getImage(), "PNG", bos);
+            byte[] bytes = bos.toByteArray();
+            Base64.Encoder encoder = Base64.getEncoder();
+            String base64String = "";
+            base64String = encoder.encodeToString(bytes);
+            map.put("url", "data:image/png;base64," + base64String);
+            map.put("status", "200");
+        }
+        catch(Exception e){
+            e.printStackTrace();
+        }
+
+        return map;
+    }
 
 
 
