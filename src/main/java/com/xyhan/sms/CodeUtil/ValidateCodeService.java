@@ -4,6 +4,7 @@ import com.xyhan.sms.Config.MyConstants;
 import com.xyhan.sms.RedisData.RedisService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.context.request.ServletWebRequest;
 
 import javax.servlet.http.HttpServletRequest;
@@ -12,6 +13,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 @Service
+@CrossOrigin(origins = "http://localhost:4200")
 public class ValidateCodeService {
     @Autowired
     private RedisService redisService;
@@ -23,7 +25,6 @@ public class ValidateCodeService {
     private DefaultSmsCodeSender defaultSmsCodeSender;
 
     private  String tokenId="TOKEN-PHONE-";
-
 
     public Map<String, Object> SmsRedisValidate(HttpServletRequest request, HttpServletResponse response, String phone) {
         Map<String, Object> map = new HashMap<>();
@@ -66,14 +67,11 @@ public class ValidateCodeService {
                     map.put("phone", phone);
                     defaultSmsCodeSender.send(phone, smsInMemory);
                 }
-
-
             } else {//距上次请求未超过1分钟
                 if (response.getStatus() == 200) {
                     map.put("status", "repeated");
                 }
             }
-
         }
         return map;
     }

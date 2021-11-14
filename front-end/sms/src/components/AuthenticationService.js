@@ -1,10 +1,11 @@
 import Axios from "axios";
 export const USER_NAME_SESSION_ATTRIBUTE_NAME = 'authenticatedUser'
+Axios.defaults.withCredentials=true
 const qs = require('qs')
 class AuthenticationService {
 
     executeSmsGetCode(phone, imgCode) {
-        return Axios.get(`http://localhost:8080/auth/sms`, {params : {phone, imgCode}})
+         return Axios.get(`http://localhost:8080/auth/sms`, {params: {phone, imgCode}})
     }
 
     executeSmsAuthenticationService(phone, sms) {
@@ -12,22 +13,9 @@ class AuthenticationService {
         return Axios.post(`http://localhost:8080/auth/login`, postData)
     }
 
-
-    // //Basic Auth
-    // executeBasicAuthenticationService(username, password) {
-    //     return Axios.get(`${API_URL}/basicauth`, 
-    //         {headers: {authorization: this.createBasicAuthToken(username, password)}})
-    // }
-    // createBasicAuthToken(username, password) {
-    //     return 'Basic ' + window.btoa(username + ":" + password)
-    // }
-
-    // registerSuccessfulLogin(phone, password){
-    //     sessionStorage.setItem(USER_NAME_SESSION_ATTRIBUTE_NAME, phone);
-    //     this.setupAxiosInterceptors(this.createBasicAuthToken(username, password))
-    // }
-
-
+    executeImageCodeGet() {
+        return Axios.get('http://localhost:8080/auth/getImage/base64')
+    }
 
     // //Utils
     logout(){
@@ -45,6 +33,8 @@ class AuthenticationService {
             // this.setupAxiosInterceptors(this.createJwtToken(token))
         }
 
+
+    
     // getLoggedInUserName() {
     //     let user = sessionStorage.getItem(USER_NAME_SESSION_ATTRIBUTE_NAME)
     //     if(user == null) return ''

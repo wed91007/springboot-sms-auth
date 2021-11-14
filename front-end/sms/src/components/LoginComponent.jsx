@@ -1,6 +1,5 @@
 import React, {Component} from 'react'
 import AuthenticationService from './AuthenticationService.js'
-import Axios from "axios";
 
 class LoginComponent extends Component {
     constructor(props){
@@ -36,8 +35,7 @@ class LoginComponent extends Component {
       }
 
       refreshImageCode() {
-        Axios.get('http://localhost:8080/auth/getImage/base64'
-        )
+        AuthenticationService.executeImageCodeGet()
         .then(response => {
           this.setState({ imgBase64: response.data.url});
         });
@@ -82,9 +80,6 @@ class LoginComponent extends Component {
             showSuccessMessage : false,
             repeatedClick: false
         })
- 
-     
-        
     }
 
     sendCodeClicked() {
@@ -103,9 +98,14 @@ class LoginComponent extends Component {
                 if(response.data.status === "repeated"){
                     this.setState({repeatedClick: true})
                 }
-                this.setState({smsSendSuccess: true})
+                
+                if(response.data.status === "OK"){
+                    this.setState({smsSendSuccess: true})
+                }
+                
             })
             .catch( (response) => {
+                
                 this.setState({smsSendSuccessError : true})
                 console.log(response)
             })
@@ -117,8 +117,7 @@ class LoginComponent extends Component {
                 smsSendSuccess: false
             })
         }
-            
-        this.refreshImageCode()
+        this.refreshImageCode();
         
     }
     

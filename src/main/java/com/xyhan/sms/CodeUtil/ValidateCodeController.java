@@ -30,11 +30,11 @@ import java.util.Random;
 @CrossOrigin(origins = "http://localhost:4200")
 @RestController
 public class ValidateCodeController {
+    private  String tokenId="TOKEN-PHONE-";
+
 
     @Autowired
     private RedisService redisService;
-
-    private  String tokenId="TOKEN-PHONE-";
 
     @Autowired
     private SessionStrategy sessionStrategy;
@@ -51,18 +51,18 @@ public class ValidateCodeController {
     @Autowired
     private ValidateCodeService validateCodeService;
 
-    public ValidateCodeController() {
-    }
-
     @GetMapping("/auth/sms")
     public Map<String, Object> createSmsCode(HttpServletRequest request, HttpServletResponse response) throws ServletRequestBindingException {
         //get phone number
         String phone = ServletRequestUtils.getStringParameter(request, "phone");
         String imgCode = ServletRequestUtils.getStringParameter(request, "imgCode");
+
         Map<String, Object> map = new HashMap<>();
-        ImageCode imgCodeInMemory = (ImageCode) sessionStrategy.getAttribute(new ServletWebRequest(request), MyConstants.SESSION_KEY);
-        String sessionCode = imgCodeInMemory.getCode();
+
+        String sessionCode = (String) sessionStrategy.getAttribute(new ServletWebRequest(request), MyConstants.SESSION_KEY);
+
         if(sessionCode != null && sessionCode.equals(imgCode)) {
+            response.setHeader("Access-Control-Allow-Credentials", "true");
             map = validateCodeService.SmsRedisValidate(request, response, phone);
         }
         else{
@@ -78,6 +78,7 @@ public class ValidateCodeController {
         String sms = ServletRequestUtils.getStringParameter(request, "sms");
 
         String smsInMemory = redisService.get(tokenId+phone);
+        response.setHeader("Access-Control-Allow-Credentials", "true");
         long smsRequestTimes = Integer.parseInt(redisService.get(smsInMemory));
         if(smsRequestTimes <= MyConstants.MAX_REQUEST_PER_PHONE_USER) {//验证次数小于规定
             redisService.set(smsInMemory, Long.toString(smsRequestTimes+1));
@@ -111,9 +112,12 @@ public class ValidateCodeController {
             response.setHeader("Expire", "0");
             response.setHeader("Pragma", "no-cache");
             ImageCode imageCode = (ImageCode)imageCodeGenerator.generate(new ServletWebRequest(request));
+            String codeInSession = imageCode.getCode();
             sessionStrategy.removeAttribute(new ServletWebRequest(request), MyConstants.SESSION_KEY);
-            sessionStrategy.setAttribute(new ServletWebRequest(request), MyConstants.SESSION_KEY, imageCode);
+            sessionStrategy.setAttribute(new ServletWebRequest(request), MyConstants.SESSION_KEY, codeInSession);
             ImageIO.write(imageCode.getImage(), "PNG", response.getOutputStream());
+
+            log.debug("image code in memory: "+codeInSession);
         }
         catch(Exception e){
             e.printStackTrace();
@@ -127,14 +131,18 @@ public class ValidateCodeController {
 
         try{
             response.setContentType("image/png");
+            response.setHeader("Access-Control-Allow-Origin", request.getHeader("Origin"));
+            response.setHeader("Access-Control-Allow-Credentials", "true");
             response.setHeader("Cache-Control", "no-cache");
             response.setHeader("Expire", "0");
             response.setHeader("Pragma", "no-cache");
 
             ImageCode imageCode = (ImageCode)imageCodeGenerator.generate(new ServletWebRequest(request));
+            String codeInSession = imageCode.getCode();
             sessionStrategy.removeAttribute(new ServletWebRequest(request), MyConstants.SESSION_KEY);
-            sessionStrategy.setAttribute(new ServletWebRequest(request), MyConstants.SESSION_KEY, imageCode);
-
+            log.debug("removed old img code");
+            sessionStrategy.setAttribute(new ServletWebRequest(request), MyConstants.SESSION_KEY, codeInSession);
+            log.debug("img code in session: "+imageCode.getCode());
             ByteArrayOutputStream bos = new ByteArrayOutputStream();
             ImageIO.write(imageCode.getImage(), "PNG", bos);
             byte[] bytes = bos.toByteArray();
@@ -143,6 +151,9 @@ public class ValidateCodeController {
             base64String = encoder.encodeToString(bytes);
             map.put("url", "data:image/png;base64," + base64String);
             map.put("status", "200");
+
+            log.debug("base64 code in memory: "+codeInSession);
+            log.debug("SessionId:" + request.getSession().getId());
         }
         catch(Exception e){
             e.printStackTrace();
