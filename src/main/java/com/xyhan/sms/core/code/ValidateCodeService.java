@@ -1,10 +1,12 @@
-package com.xyhan.sms.CodeUtil;
+package com.xyhan.sms.core.code;
 
-import com.xyhan.sms.Config.MyConstants;
-import com.xyhan.sms.RedisData.RedisService;
+import com.xyhan.sms.config.ConstantsConfig;
+import com.xyhan.sms.core.code.sms.DefaultSmsCodeSender;
+import com.xyhan.sms.core.code.sms.SmsCodeGenerator;
+import com.xyhan.sms.data.redis.RedisService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.util.StringUtils;
 import org.springframework.web.context.request.ServletWebRequest;
 
 import javax.servlet.http.HttpServletRequest;
@@ -13,7 +15,6 @@ import java.util.HashMap;
 import java.util.Map;
 
 @Service
-@CrossOrigin(origins = "http://localhost:4200")
 public class ValidateCodeService {
     @Autowired
     private RedisService redisService;
@@ -49,7 +50,7 @@ public class ValidateCodeService {
                 redisService.expire(smsCode.getCode(), smsCode.getExpireIn());
 
                 redisService.set(phone, "1");
-                redisService.expire(phone, MyConstants.PHONE_REQUEST_INTERVAL);
+                redisService.expire(phone, ConstantsConfig.PHONE_REQUEST_INTERVAL);
 
                 //send code to phone (show in logs)
                 defaultSmsCodeSender.send(phone, smsCode.getCode());
@@ -62,7 +63,7 @@ public class ValidateCodeService {
                     long ttl = redisService.ttl(tokenId + phone);
 
                     redisService.set(phone, "1");
-                    redisService.expire(phone, Math.min(ttl, MyConstants.PHONE_REQUEST_INTERVAL)); //有效期最多至sms相同有效期
+                    redisService.expire(phone, Math.min(ttl, ConstantsConfig.PHONE_REQUEST_INTERVAL)); //有效期最多至sms相同有效期
                     map.put("verifyCode", smsInMemory);
                     map.put("phone", phone);
                     defaultSmsCodeSender.send(phone, smsInMemory);
@@ -77,9 +78,30 @@ public class ValidateCodeService {
     }
 
 
-
-
-
-
-
+    public Map<String, Object> smsLoginValidate(HttpServletRequest request, HttpServletResponse response, String phone, String sms) {
+        Map<String,Object> map = new HashMap<>();
+        String smsInMemory = redisService.get(tokenId+phone);
+        long smsRequestTimes = Integer.parseInt(redisService.get(smsInMemory));
+        if(smsRequestTimes <= ConstantsConfig.MAX_REQUEST_PER_PHONE_USER) {//验证次数小于规定
+            redisService.set(smsInMemory, Long.toString(smsRequestTimes+1));
+            if(StringUtils.isEmpty(smsInMemory)) {
+                map.put("status", 404);
+            }
+            else if(!"".equals(smsInMemory) && !sms.equals(smsInMemory)) {
+                map.put("status", 500);
+            }
+            else{
+                map.put("status", 200);
+            }
+        }
+        else{
+            if(redisService.exist(tokenId+phone)) {
+                if(redisService.exist(smsInMemory)) redisService.remove(smsInMemory);
+                if(redisService.exist(phone)) redisService.remove(phone);
+                redisService.remove(tokenId+phone);
+                map.put("status", 403);
+            }
+        }
+        return map;
+    }
 }

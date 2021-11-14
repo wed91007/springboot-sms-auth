@@ -1,6 +1,8 @@
-package com.xyhan.sms.CodeUtil;
+package com.xyhan.sms.core.code.image;
 
-import com.xyhan.sms.Config.MyConstants;
+import com.xyhan.sms.config.ConstantsConfig;
+import com.xyhan.sms.core.code.ValidateCode;
+import com.xyhan.sms.core.code.ValidateCodeGenerator;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import org.springframework.web.bind.ServletRequestUtils;
@@ -13,15 +15,12 @@ import java.util.Random;
 // 图片验证码生成器
 @Component("imageCodeGenerator")
 public class ImageCodeGenerator implements ValidateCodeGenerator {
-
-
     //生成图形验证码
-
     @Override
     public ValidateCode generate(ServletWebRequest request) {
 
-        int width = ServletRequestUtils.getIntParameter(request.getRequest(), "width", MyConstants.WIDTH);
-        int height = ServletRequestUtils.getIntParameter(request.getRequest(), "height", MyConstants.HEIGHT);
+        int width = ServletRequestUtils.getIntParameter(request.getRequest(), "width", ConstantsConfig.WIDTH);
+        int height = ServletRequestUtils.getIntParameter(request.getRequest(), "height", ConstantsConfig.HEIGHT);
         BufferedImage image = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
 
         Graphics g = image.getGraphics();
@@ -41,7 +40,7 @@ public class ImageCodeGenerator implements ValidateCodeGenerator {
         }
 
         String sRand = "";
-        int length = ServletRequestUtils.getIntParameter(request.getRequest(), "length", MyConstants.IMAGE_RANDOM_SIZE);
+        int length = ServletRequestUtils.getIntParameter(request.getRequest(), "length", ConstantsConfig.IMAGE_RANDOM_SIZE);
         for (int i = 0; i < length; i++) {
             String rand = String.valueOf(random.nextInt(10));
             sRand += rand;
@@ -51,7 +50,7 @@ public class ImageCodeGenerator implements ValidateCodeGenerator {
 
         g.dispose();
 
-        return new ImageCode(image, sRand, MyConstants.IMAGE_EXPIRE_SECOND);
+        return new ImageCode(image, sRand, ConstantsConfig.IMAGE_EXPIRE_SECOND);
     }
 
     //生成随机背景条纹

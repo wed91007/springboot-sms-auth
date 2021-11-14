@@ -1,4 +1,4 @@
-package com.xyhan.sms.RedisData;
+package com.xyhan.sms.data.redis;
 
 public interface RedisService {
 

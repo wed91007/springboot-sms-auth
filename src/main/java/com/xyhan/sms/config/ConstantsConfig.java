@@ -1,6 +1,6 @@
-package com.xyhan.sms.Config;
+package com.xyhan.sms.config;
 
-public class MyConstants {
+public class ConstantsConfig {
     public static final String SESSION_KEY = "SESSION_KEY_CODE";
 
     // 图片宽度

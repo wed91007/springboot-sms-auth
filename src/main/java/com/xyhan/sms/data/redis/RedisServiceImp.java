@@ -1,4 +1,4 @@
-package com.xyhan.sms.RedisData;
+package com.xyhan.sms.data.redis;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.StringRedisTemplate;
