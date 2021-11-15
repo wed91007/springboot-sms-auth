@@ -1,12 +1,12 @@
 import React, {Component} from 'react'
 import {BrowserRouter as Router, Route, Switch} from 'react-router-dom'
-import AuthenticatedRoute from './AuthenticatedRoute.jsx'
-import LoginComponent from './LoginComponent.jsx'
-import ErrorComponent from './ErrorComponent.jsx'
-import WelcomeComponent from './WelcomeComponent.jsx'
-import HeaderComponent from './HeaderComponent.jsx'
-import FooterComponent from './FooterComponent.jsx'
-import LogoutComponent from './LogoutComponent.jsx'
+import AuthenticatedRoute from './auth/AuthenticatedRoute.jsx'
+import LoginComponent from './login/LoginComponent.jsx'
+import ErrorComponent from './common/ErrorComponent.jsx'
+import WelcomeComponent from './welcome/WelcomeComponent.jsx'
+import HeaderComponent from './common/HeaderComponent.jsx'
+import FooterComponent from './common/FooterComponent.jsx'
+import LogoutComponent from './common/LogoutComponent.jsx'
 
 class SmsApp extends Component{
     render() {

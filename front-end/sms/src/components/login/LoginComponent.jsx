@@ -1,6 +1,7 @@
 import React, {Component} from 'react'
-import AuthenticationService from './AuthenticationService.js'
-
+import AuthenticationService from '../auth/AuthenticationService.js'
+import './../UI/css/main.css'
+import './../UI/css/util.css'
 class LoginComponent extends Component {
     constructor(props){
         super(props)
@@ -145,22 +146,54 @@ class LoginComponent extends Component {
     render() {
         return (
             <div>
-                {/* controlled  component*/}
-                {/* <ShowInvalidCredentials hasLogFailed={this.state.hasLogFailed}/> */}
-                <h1>Login</h1>
-                <div className="container">
-                    {this.state.repeatedClick && <div className="alert alert-warning">请求过于频繁</div>}  
-                    {this.state.smsSendSuccess && <div className="alert alert-warning">验证码已发送</div>}
-                    {this.state.smsSendSuccessError && <div className="alert alert-warning">验证码发送失败</div>}
-                    {this.state.hasLogFailed && <div className="alert alert-warning">登陆失败</div>}
-                    {this.state.showSuccessMessage && <div>登录成功</div>}
-                    手机: <input type="text" name="phone" value={this.state.phone} onChange={this.phoneHandlerChange}/>
-                    验证码: <input type="text" name="sms" value={this.state.sms} onChange={this.smsHandlerChange}/>
-                    <input type="text" name="imgCode" value={this.state.imgCode} onChange={this.imgCodeHandlerChange}/> <img src={this.state.imgBase64} alt="validation code"/>
-                    <button className="btn btn-warning" onClick={this.sendCodeClicked}>发送验证码</button>
-                    <button className="btn btn-success" onClick={this.loginClicked}>登录</button>
+            <div class="limiter">
+                <div class="container-login100">
+                    <div class="wrap-login100 p-t-50 p-b-90">
+                            <span class="login100-form-title p-b-51">
+                                用户登录
+                            </span>
+                        <div>
+                            {this.state.repeatedClick && <div className="alert alert-warning">请求过于频繁,请稍再试</div>} 
+                            {this.state.smsSendSuccess && <div className="alert alert-warning">验证码已发送</div>}
+                            {this.state.smsSendSuccessError && <div className="alert alert-warning">验证码发送失败</div>}
+                            {this.state.hasLogFailed && <div className="alert alert-warning">登陆失败</div>}
+                            {this.state.showSuccessMessage && <div>登录成功</div>}
+                        </div>
+                
+                        <div class="wrap-input100 validate-input m-b-16">
+                            <input class="input100" type="text" name="phone" value={this.state.phone} onChange={this.phoneHandlerChange} placeholder="手机号"/>
+                            <span class="focus-input100"></span>
+                        </div>
+                
+                    <div class="wrap-input100 validate-input m-b-16">
+                        <input class="input100" type="text" name="imgCode" value={this.state.imgCode} onChange={this.imgCodeHandlerChange} placeholder="图片验证码"/>
+                        <span class="focus-input100"></span>
+                    </div>
+
+                    <div>
+                        <img src={this.state.imgBase64} alt="validation code"/>
+                    </div>
+                    
+                    <div class="container-login100-form-btn m-t-17">
+                        <button class="login100-form-btn" onClick={this.sendCodeClicked}>
+                            发送验证码
+                        </button>
+                    </div>
+
+                    <div class="wrap-input100 validate-input m-t-17">
+                        <input class="input100" type="text" name="sms" value={this.state.sms} onChange={this.smsHandlerChange} placeholder="短信验证码"/>
+                        <span class="focus-input100"></span>
+                    </div>
+                    
+                    <div class="container-login100-form-btn m-t-17">
+                        <button class="login100-form-btn" onClick={this.loginClicked}>
+                            登录
+                        </button>
+                    </div>
                 </div>
             </div>
+        </div>
+    </div>
         )  
     }
     
