@@ -32,7 +32,8 @@ public class ValidateCodeService {
         //从redis取出手机号进行校验
         //如果redis不存在该手机：生成验证码，写入redis，返回。设置失效时间。
         //如果redis存在该手机：判断请求时间间隔是否超过；
-        if (!redisService.exist(tokenId + phone)) { //当前不验证码存在，产生新验证
+        if (!redisService.exist(tokenId + phone)) {
+            //当前不验证码存在，产生新验证
 
             //生成sms code
             ValidateCode smsCode = smsCodeGenerator.generate(new ServletWebRequest(request));
@@ -46,8 +47,8 @@ public class ValidateCodeService {
                 redisService.set(tokenId + phone, smsCode.getCode());
                 redisService.expire(tokenId + phone, smsCode.getExpireIn());
                 //记录次数
-                redisService.set(smsCode.getCode(), "1");
-                redisService.expire(smsCode.getCode(), smsCode.getExpireIn());
+                redisService.set(phone+smsCode.getCode(), "1");
+                redisService.expire(phone+smsCode.getCode(), smsCode.getExpireIn());
 
                 redisService.set(phone, "1");
                 redisService.expire(phone, ConstantsConfig.PHONE_REQUEST_INTERVAL);
@@ -57,13 +58,15 @@ public class ValidateCodeService {
             }
         } else {//当前验证码存在，进行判断
             String smsInMemory = redisService.get(tokenId + phone);
-            if (!redisService.exist(phone)) {         //距上次请求超过1分钟，phone记录不存在
+            if (!redisService.exist(phone)) {
+                //距上次请求超过1分钟，phone记录不存在
                 if (response.getStatus() == 200) {
                     map.put("status", "OK");
                     long ttl = redisService.ttl(tokenId + phone);
 
                     redisService.set(phone, "1");
-                    redisService.expire(phone, Math.min(ttl, ConstantsConfig.PHONE_REQUEST_INTERVAL)); //有效期最多至sms相同有效期
+                    redisService.expire(phone, Math.min(ttl, ConstantsConfig.PHONE_REQUEST_INTERVAL));
+                    //有效期最多至sms相同有效期
                     map.put("verifyCode", smsInMemory);
                     map.put("phone", phone);
                     defaultSmsCodeSender.send(phone, smsInMemory);
@@ -81,7 +84,7 @@ public class ValidateCodeService {
     public Map<String, Object> smsLoginValidate(HttpServletRequest request, HttpServletResponse response, String phone, String sms) {
         Map<String,Object> map = new HashMap<>();
         String smsInMemory = redisService.get(tokenId+phone);
-        long smsRequestTimes = Integer.parseInt(redisService.get(smsInMemory));
+        long smsRequestTimes = Integer.parseInt(redisService.get(phone+smsInMemory));
         if(smsRequestTimes <= ConstantsConfig.MAX_REQUEST_PER_PHONE_USER) {//验证次数小于规定
             redisService.set(smsInMemory, Long.toString(smsRequestTimes+1));
             if(StringUtils.isEmpty(smsInMemory)) {
@@ -96,8 +99,12 @@ public class ValidateCodeService {
         }
         else{
             if(redisService.exist(tokenId+phone)) {
-                if(redisService.exist(smsInMemory)) redisService.remove(smsInMemory);
-                if(redisService.exist(phone)) redisService.remove(phone);
+                if(redisService.exist(phone+smsInMemory)) {
+                    redisService.remove(phone+smsInMemory);
+                }
+                if(redisService.exist(phone)) {
+                    redisService.remove(phone);
+                }
                 redisService.remove(tokenId+phone);
                 map.put("status", 403);
             }
